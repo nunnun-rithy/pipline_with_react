@@ -16,10 +16,17 @@ pipeline {
         stage('Build'){
             steps{
                 echo 'Build Image prepare to deploy'
-                sh 'nodejs --version'
+                sh 'node --version'
                 sh 'npm --version'
+                sh 'npm install'
                 sh 'npm run build'
                 sh "ls -ltr"
+                sh 'docker build -t react .'
+            }
+        }
+        stage('Deploy') {
+            steps{
+                sh 'docker run -d -p 8083:80 --name reactjs  react '
             }
         }
     }
