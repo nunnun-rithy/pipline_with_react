@@ -12,7 +12,9 @@ pipeline {
                 git 'https://github.com/Nun-SomRithy/pipline_with_react.git'
                 sh 'ls -ltr'
             }
-            steps('Build'){
+        }
+        stage('Build'){
+            steps{
                 echo 'Build Image prepare to deploy'
                 sh 'nodejs --version'
                 sh 'npm --version'
