@@ -38,7 +38,7 @@ jobs:
           COMMIT_SHA=$(git rev-parse --short HEAD)
 
           # Set the image tag and repository path (package name) based on the branch and commit SHA
-          IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/$BRANCH_NAME/:$COMMIT_SHA"
+          IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/$BRANCH_NAME:$COMMIT_SHA"
 
           # Output the image tag to use in the next steps
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
