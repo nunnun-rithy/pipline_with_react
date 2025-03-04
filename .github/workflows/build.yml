@@ -3,23 +3,39 @@ name: Build and Push Docker Image to GitHub Packages
 on:
   push:
     branches:
-      - main
-    tags:
-      - "v*.*.*" # Run when pushing version tags like v1.0.0, v1.2.3
-
-  pull_request:
-    branches:
-      - main
+      - main  # Only release from main branch
 
 jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all history for correct versioning
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install -g semantic-release @semantic-release/changelog @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/github @semantic-release/git @semantic-release/exec
+
+      - name: Run Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
   build:
+    needs: release
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0 # Ensure we fetch all tags
+          fetch-depth: 0
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -31,23 +47,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Extract branch name (for non-tagged pushes)
-        if: startsWith(github.ref, 'refs/heads/')
-        id: extract_branch
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+      - name: Extract branch name
+        run: echo "BRANCH_NAME=main" >> $GITHUB_ENV
 
-      - name: Get latest Git tag (for versioning)
+      - name: Get latest Git tag
         id: version
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-            BRANCH_NAME=$VERSION
-          else
-            VERSION="latest"
-            BRANCH_NAME=${{ env.BRANCH_NAME }}
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.1")
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Convert repository owner to lowercase
         id: lowercase_owner
