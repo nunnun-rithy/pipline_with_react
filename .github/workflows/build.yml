@@ -28,8 +28,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # Step 4: Set image tag based on the branch and commit SHA
-      - name: Set image tag
+      # Step 4: Set image tag and repository path based on branch and commit SHA
+      - name: Set image tag and repository path
         run: |
           # Extract the branch name from the Git reference
           BRANCH_NAME=$(echo ${GITHUB_REF} | sed 's/refs\/heads\///')
@@ -37,8 +37,8 @@ jobs:
           # Get the commit SHA
           COMMIT_SHA=$(git rev-parse --short HEAD)
 
-          # Set the image tag based on branch and commit SHA
-          IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/$BRANCH_NAME:$COMMIT_SHA"
+          # Set the image tag and repository path (package name) based on the branch and commit SHA
+          IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/$BRANCH_NAME/asda:$COMMIT_SHA"
 
           # Output the image tag to use in the next steps
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
