@@ -3,7 +3,8 @@ name: Build and Push Docker Image to GitHub Packages
 on:
   push:
     branches:
-      - main  # Trigger only on push to the main branch
+      - main    # Trigger on push to 'main'
+      - master  # Trigger on push to 'master'
 
 jobs:
   build:
@@ -26,12 +27,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # Step 4: Build the Docker image
+      # Step 4: Set image tag based on branch
+      - name: Set image tag based on branch
+        run: |
+          if [ "${GITHUB_REF}" == "refs/heads/main" ]; then
+            IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:main"
+          elif [ "${GITHUB_REF}" == "refs/heads/master" ]; then
+            IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:master"
+          fi
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      # Step 5: Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest .
+          docker build -t $IMAGE_TAG .
 
-      # Step 5: Push the Docker image to GitHub Packages
+      # Step 6: Push Docker image to GitHub Packages
       - name: Push Docker image to GitHub Packages
         run: |
-          docker push ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
+          docker push $IMAGE_TAG
