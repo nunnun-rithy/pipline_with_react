@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main    # Trigger on push to 'main'
-      - master  # Trigger on push to 'master'
-      - dev     # Trigger on push to 'dev'
+      - dev  # Trigger on push to 'master'
 
 jobs:
   build:
@@ -28,19 +27,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # Step 4: Extract Branch and Commit SHA
-      - name: Set image tag based on branch and commit SHA
+      # Step 4: Set image tag based on branch
+      - name: Set image tag based on branch
         run: |
-          # Extract the branch name from the Git reference
-          BRANCH_NAME=$(echo ${GITHUB_REF} | sed 's/refs\/heads\///')
-
-          # Get the commit SHA
-          COMMIT_SHA=$(git rev-parse --short HEAD)
-
-          # Set the image tag using the branch name and commit SHA
-          IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/$BRANCH_NAME:$COMMIT_SHA"
-          
-          # Store the image tag for later use
+          if [ "${GITHUB_REF}" == "refs/heads/main" ]; then
+            IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:main"
+          elif [ "${GITHUB_REF}" == "refs/heads/master" ]; then
+            IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:123"
+          fi
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       # Step 5: Build Docker image
