@@ -9,7 +9,7 @@ pipeline {
                 script {
                     // SonarQube analysis for JavaScript/React code
                     withSonarQubeEnv(installationName: 'sq1') {
-                        sh 'sonar-scanner'
+                        sh 'sonar-rithy'
                     }
                 }
             }
