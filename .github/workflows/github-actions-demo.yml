@@ -1,8 +1,9 @@
 name: Build and Push Docker Image to GitHub Packages
+
 on:
   pull_request:
     types:
-      - closed  # Trigger only when a PR is closed
+      - closed
     branches:
       - main
       - master
@@ -10,12 +11,14 @@ on:
 
 jobs:
   build:
-    if: github.event.pull_request.merged == true  # Only run if PR was merged
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout base branch
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.base_ref }}  # Ensure the correct branch is checked out
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -27,17 +30,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Set image tag and repository path
+      - name: Set image tag
         run: |
-          BRANCH_NAME=${{ github.base_ref }}  # Get base branch (e.g., main)
+          BRANCH_NAME=${{ github.base_ref }}  # Now it correctly sets 'dev' instead of 'dev-testing-new-feature'
           COMMIT_SHA=$(git rev-parse --short HEAD)
-          IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/$BRANCH_NAME:$COMMIT_SHA"
+          IMAGE_TAG="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:$COMMIT_SHA"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-      - name: Build Docker image
-        run: |
-          docker build -t $IMAGE_TAG .
-
-      - name: Push Docker image to GitHub Packages
-        run: |
-          docker push $IMAGE_TAG
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
