@@ -1,9 +1,7 @@
 name: Build and Push Docker Image to GitHub Packages
 
 on:
-  pull_request:
-    types:
-      - closed
+  push:
     branches:
       - main
       - master
